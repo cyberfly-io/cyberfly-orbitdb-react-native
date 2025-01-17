@@ -1,18 +1,14 @@
+import {SKReactNativeLevel} from 'react-native-leveldb-level-adapter';
 
-import { SKReactNativeLevel } from 'react-native-leveldb-level-adapter';
+const LevelStorage = async ({path = ''} = {}) => {
+  const name = path.replaceAll('/', '_');
 
+  const db = new SKReactNativeLevel(name, {valueEncoding: 'buffer'});
+  await db.open();
 
-const LevelStorage =  async({ path } = {}) => {
-  const name = path.replaceAll('/','_')
-
-
-   const db = new  SKReactNativeLevel(name, {valueEncoding:'buffer'});
-   await db.open()
-
-
-  const put =  async(hash:string, value:any) => {
-    await db.put(hash, value)
-  }
+  const put = async (hash: string, value: any) => {
+    await db.put(hash, value);
+  };
 
   /**
    * Deletes data from Level.
@@ -22,8 +18,7 @@ const LevelStorage =  async({ path } = {}) => {
    * @memberof module:Storage.Storage-Level
    * @instance
    */
-  const del = async(hash:string) => {
-  };
+  const del = async (hash: string) => {};
   /**
    * Gets data from Level.
    * @function
@@ -31,18 +26,16 @@ const LevelStorage =  async({ path } = {}) => {
    * @memberof module:Storage.Storage-Level
    * @instance
    */
-  const get =  async(hash:string) => {
-   
-
+  const get = async (hash: string) => {
     try {
-      const value = await db.get(hash)
+      const value = await db.get(hash);
       if (value) {
-        return value['data']
+        return value['data'];
       }
     } catch (e) {
       // LEVEL_NOT_FOUND (ie. key not found)
     }
-  }
+  };
 
   /**
    * Iterates over records stored in Level.
@@ -51,30 +44,30 @@ const LevelStorage =  async({ path } = {}) => {
    * @memberof module:Storage.Storage-Level
    * @instance
    */
-  const iterator = async  function * ({ amount, reverse } = {}) {
-    for await(const [key, value] of db.iterator()) {
-      yield [key, value]
+  const iterator = async function* ({} = {}) {
+    for await (const [key, value] of db.iterator()) {
+      yield [key, value];
     }
-  }
-  const merge =  (other) => {}
+  };
+  const merge = other => {};
 
   /**
-  * Clears the contents of the Level db.
-  * @function
-  * @memberof module:Storage.Storage-Level
-  * @instance
-  */
-  const clear = async () => {}
+   * Clears the contents of the Level db.
+   * @function
+   * @memberof module:Storage.Storage-Level
+   * @instance
+   */
+  const clear = async () => {};
 
   /**
-  * Closes the Level db.
-  * @function
-  * @memberof module:Storage.Storage-Level
-  * @instance
-  */
-  const close =  () => {
-     db.close()
-  }
+   * Closes the Level db.
+   * @function
+   * @memberof module:Storage.Storage-Level
+   * @instance
+   */
+  const close = () => {
+    db.close();
+  };
 
   return {
     put,
@@ -83,8 +76,8 @@ const LevelStorage =  async({ path } = {}) => {
     iterator,
     merge,
     clear,
-    close
-  }
-}
+    close,
+  };
+};
 
-export default LevelStorage
+export default LevelStorage;

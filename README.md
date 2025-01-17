@@ -1,6 +1,4 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
-
-# Getting Started
+S# Getting Started
 
 >**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
 
@@ -55,26 +53,37 @@ Now that you have successfully run the app, let's modify it.
 
    For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
 
-## Congratulations! :tada:
+# Polyfill
 
-You've successfully run and modified your React Native App. :partying_face:
+Libp2p and Helia rely on packages not available on browsers.
 
-### Now what?
+Polyfills are handled in the metro.config.js and bable.config.js
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+metro.config.js handles loading packages
 
-# Troubleshooting
+bable.config.js handles aliases
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+# Attributions
+Cyberfly.io - Setting up Polyfills to replace the previous method of just bundling up an entire nodejs enviroment
+
 
 # Learn More
 
+## FrontEnd
 To learn more about React Native, take a look at the following resources:
-
 - [React Native Website](https://reactnative.dev) - learn more about React Native.
 - [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
-# cyberfly-libp2p-react-native
+
+## Backend
+To learn more about Helia and IPFS(Networking and implementation):
+   https://ipfs.tech/
+   https://github.com/ipfs/helia
+
+To learn more about orbitDB (The database built on top of IPFS):
+   https://github.com/orbitdb/orbitdb
+
+To learn more about libp2p(Networking IPFS is built on top of):
+   https://libp2p.io/

@@ -151,7 +151,6 @@ export class LevelBlockstore extends BaseBlockstore {
 
     try {
       for await (const [key, value] of li) {
-        // @ts-expect-error key is a buffer because keyEncoding is "buffer"
         yield { key: new TextDecoder().decode(key), value }
       }
     } finally {
