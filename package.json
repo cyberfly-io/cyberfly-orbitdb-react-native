@@ -29,7 +29,7 @@
     "@libp2p/webrtc": "^5.0.16",
     "@libp2p/websockets": "^9.0.11",
     "@libp2p/webtransport": "^5.0.21",
-    "@orbitdb/core": "github:orbitdb/orbitdb",
+    "@orbitdb/core": "3.0.2",
     "@orbitdb/core-types": "^1.0.11",
     "@peculiar/webcrypto": "^1.4.4",
     "@react-navigation/native": "^7.0.14",
