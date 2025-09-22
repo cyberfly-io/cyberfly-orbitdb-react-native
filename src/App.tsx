@@ -36,7 +36,7 @@ export default function App() {
     orbitdb.ipfs.libp2p.services.pubsub.addEventListener('message', (msg) => {
         const { topic, data, from } = msg.detail
 
-        if(topic == "test")
+        if(topic === "test")
          console.log('Received pubsub message:', data ? new TextDecoder().decode(data) : null, 'from', from.toString());
     });
   }
@@ -76,6 +76,13 @@ async function addData(){
     });
     // Print out the above records.
     console.log(await db.all());
+
+    const db2 = await orbitdb.open(
+      "/orbitdb/zdpuAnQwxqZbkm5AKok61YRX6vx4cayztof3qKMjKptdRQKy3",
+      { type: 'documents', indexStorage, headsStorage, entryStorage },
+    );
+    console.log('db2 loaded');
+    console.log(await db2.all());
   }
   catch(e){
     console.log(e);

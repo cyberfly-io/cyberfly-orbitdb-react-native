@@ -8,11 +8,20 @@ import { TextEncoder, TextDecoder } from 'text-encoding';
 import { EventTarget, Event } from 'event-target-shim';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { Crypto } from '@peculiar/webcrypto';
+import { registerGlobals as registerWebRTCGlobals } from 'react-native-webrtc';
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 global.EventTarget = EventTarget;
 global.Event = Event;
+
+// Ensure WebRTC globals are available (RTCPeerConnection, RTCIceCandidate, etc.)
+try {
+  registerWebRTCGlobals();
+} catch (e) {
+  // If the native module isn't installed yet, libp2p webrtc transport will fail at runtime
+  // We'll still proceed to allow other parts to load; install the native module to fix.
+}
 
 // Polyfill Promise.withResolvers for Hermes/older JS engines
 if (typeof Promise.withResolvers !== 'function') {
