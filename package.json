@@ -61,7 +61,6 @@
     "react-native-leveldb": "^3.6.0",
     "react-native-leveldb-level-adapter": "^0.2.1",
     "react-native-quick-crypto": "^0.7.10",
-    "react-native-reanimated": "^3.16.5",
     "react-native-tcp-socket": "^6.0.6",
     "react-native-typography": "^1.4.1",
     "react-native-url-polyfill": "^2.0.0",
