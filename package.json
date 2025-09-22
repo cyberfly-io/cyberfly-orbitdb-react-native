@@ -31,6 +31,7 @@
     "@orbitdb/core": "3.0.2",
     "@orbitdb/core-types": "^1.0.11",
     "@peculiar/webcrypto": "^1.4.4",
+    "@react-native-clipboard/clipboard": "^1.16.3",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.2.0",
     "@react-navigation/stack": "^7.1.1",

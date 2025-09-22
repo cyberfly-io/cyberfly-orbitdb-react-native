@@ -37,6 +37,7 @@ export const config = {
     addresses: {
       listen: [
         '/webrtc',
+        '/p2p-circuit'
       ],
     },
     transports: [
