@@ -13,6 +13,7 @@ import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { autoNAT } from '@libp2p/autonat';
 import { dcutr } from '@libp2p/dcutr';
 import { ping } from '@libp2p/ping'
+import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 const swarm = `/key/swarm/psk/1.0.0/
 /base16/
 8463a7707bad09f63538d273aa769cbdd732e43b07f207d88faa323566168ad3`;
@@ -23,7 +24,12 @@ export const config = {
         list: [
           '/dns4/node.cyberfly.io/tcp/31002/ws/p2p/12D3KooWA8mwP9wGUc65abVDMuYccaAMAkXhKUqpwKUZSN5McDrw',
         ],
-      })
+      }),
+     pubsubPeerDiscovery({
+      interval: 10000,
+      topics: ["cyberfly._peer-discovery._p2p._pubsub"],
+      listenOnly: false,
+    })
     ],
     connectionProtector: preSharedKey({
         psk: uint8ArrayFromString(swarm),
