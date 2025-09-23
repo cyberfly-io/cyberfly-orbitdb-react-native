@@ -67,6 +67,7 @@ export default function App() {
           );
           const manifest = await manifestStore.get(addr.hash);
           if (manifest.accessController.includes('cyberfly')) {
+            console.log(`Pinning db: ${dat.dbaddr}`);
             await orbitdb.open(dat.dbaddr, { entryStorage, headsStorage, indexStorage });
             console.log('Pinned db:', dat.dbaddr);
           }

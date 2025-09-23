@@ -1,80 +1,46 @@
 
 import { SKReactNativeLevel } from 'react-native-leveldb-level-adapter';
 
+const LevelStorage = async ({ path }: { path?: string } = {}) => {
+  const name = (path ?? 'orbitdb').replaceAll('/', '_');
+  const db = new SKReactNativeLevel(name, { valueEncoding: 'buffer' });
+  await db.open();
 
-const LevelStorage =  async({ path } = {}) => {
-  const name = path.replaceAll('/','_')
-
-
-   const db = new  SKReactNativeLevel(name, {valueEncoding:'buffer'});
-   await db.open()
-
-
-  const put =  async(hash:string, value:any) => {
-    await db.put(hash, value)
-  }
-
-  /**
-   * Deletes data from Level.
-   * @function
-   * @param {string} hash The hash of the data to delete.
-   * @param {*} data The data to store.
-   * @memberof module:Storage.Storage-Level
-   * @instance
-   */
-  const del = async(hash:string) => {
+  const put = async (hash: string, data: any) => {
+    await db.put(hash, data);
   };
-  /**
-   * Gets data from Level.
-   * @function
-   * @param {string} hash The hash of the data to get.
-   * @memberof module:Storage.Storage-Level
-   * @instance
-   */
-  const get =  async(hash:string) => {
-   
 
+  const del = async (hash: string) => {
+    await db.del(hash);
+  };
+
+  const get = async (hash: string) => {
     try {
-      const value = await db.get(hash)
-      if (value) {
-        return value['data']
+      return await db.get(hash);
+    } catch (err: any) {
+      if (err.code === 'LEVEL_NOT_FOUND' || err.notFound) {
+        return undefined;
       }
-    } catch (e) {
-      // LEVEL_NOT_FOUND (ie. key not found)
+      throw err;
     }
-  }
+  };
 
-  /**
-   * Iterates over records stored in Level.
-   * @function
-   * @yields [string, string] The next key/value pair from Level.
-   * @memberof module:Storage.Storage-Level
-   * @instance
-   */
-  const iterator = async  function * ({ amount, reverse } = {}) {
-    for await(const [key, value] of db.iterator()) {
-      yield [key, value]
+  const iterator = async function* ({ gte, gt, lte, lt, reverse = false, limit }: { gte?: string, gt?: string, lte?: string, lt?: string, reverse?: boolean, limit?: number } = {}) {
+    const opts = { gte, gt, lte, lt, reverse, limit };
+    for await (const [key, value] of db.iterator(opts)) {
+      yield [key, value];
     }
-  }
-  const merge =  (other) => {}
+  };
 
-  /**
-  * Clears the contents of the Level db.
-  * @function
-  * @memberof module:Storage.Storage-Level
-  * @instance
-  */
-  const clear = async () => {}
+  const merge = (_other: any) => {};
 
-  /**
-  * Closes the Level db.
-  * @function
-  * @memberof module:Storage.Storage-Level
-  * @instance
-  */
-  const close =  () => {
-     db.close()
-  }
+  const clear = async () => {
+    await db.clear();
+  };
+
+  const close = async () => {
+    await db.close();
+  };
 
   return {
     put,
@@ -83,8 +49,8 @@ const LevelStorage =  async({ path } = {}) => {
     iterator,
     merge,
     clear,
-    close
-  }
-}
+    close,
+  };
+};
 
-export default LevelStorage
+export default LevelStorage;

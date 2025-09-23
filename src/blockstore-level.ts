@@ -14,17 +14,24 @@
  * ```
  */
 
-import { BaseBlockstore } from 'blockstore-core'
-import { DeleteFailedError, GetFailedError, NotFoundError, OpenFailedError, PutFailedError } from 'interface-store'
+import { BaseBlockstore } from 'blockstore-core';
+import { DeleteFailedError, GetFailedError, NotFoundError, OpenFailedError, PutFailedError } from 'interface-store';
 import { SKReactNativeLevel } from 'react-native-leveldb-level-adapter';
-import { base32upper } from 'multiformats/bases/base32'
-import { CID } from 'multiformats/cid'
-import * as raw from 'multiformats/codecs/raw'
-import * as Digest from 'multiformats/hashes/digest'
-import type { Pair } from 'interface-blockstore'
-import type { AbortOptions, AwaitIterable } from 'interface-store'
-import type { DatabaseOptions, OpenOptions, IteratorOptions } from 'level'
-import type { MultibaseCodec } from 'multiformats/bases/interface'
+import { base32upper } from 'multiformats/bases/base32';
+import { CID } from 'multiformats/cid';
+import * as raw from 'multiformats/codecs/raw';
+import * as Digest from 'multiformats/hashes/digest';
+import { raceSignal } from 'race-signal';
+import type { Pair } from 'interface-blockstore';
+import type { AbortOptions, AwaitIterable } from 'interface-store';
+import type { DatabaseOptions, OpenOptions, IteratorOptions } from 'level';
+import type { MultibaseCodec } from 'multiformats/bases/interface';
+
+declare global {
+  interface AbortSignal {
+    throwIfAborted(): void;
+  }
+}
 
 export interface LevelBlockstoreInit extends DatabaseOptions<string, Uint8Array>, OpenOptions {
   /**
@@ -38,124 +45,134 @@ export interface LevelBlockstoreInit extends DatabaseOptions<string, Uint8Array>
  * A blockstore backed by leveldb
  */
 export class LevelBlockstore extends BaseBlockstore {
-  public db:any
-  private readonly opts: OpenOptions
-  private readonly base: MultibaseCodec<string>
+  public db: any;
+  private readonly opts: OpenOptions;
+  private readonly base: MultibaseCodec<string>;
 
-  constructor (path: string , init: LevelBlockstoreInit = {}) {
-    super()
-    path = path.replaceAll('/','_')
+  constructor (path: string | SKReactNativeLevel, init: LevelBlockstoreInit = {}) {
+    super();
+    path = typeof path === 'string' ? path.replaceAll('/', '_') : path;
     this.db = typeof path === 'string'
       ? new SKReactNativeLevel(path, {
-        valueEncoding: 'buffer'
+        ...init,
+        keyEncoding: 'utf8',
+        valueEncoding: 'view',
       })
-      : path
+      : path;
 
     this.opts = {
       createIfMissing: true,
       compression: false, // same default as go
-      ...init
-    }
+      ...init,
+    };
 
-    this.base = init.base ?? base32upper
+    this.base = init.base ?? base32upper;
   }
 
   #encode (cid: CID): string {
-    return `/${this.base.encoder.encode(cid.multihash.bytes)}`
+    return `/${this.base.encoder.encode(cid.multihash.bytes)}`;
   }
 
   #decode (key: string): CID {
-    return CID.createV1(raw.code, Digest.decode(this.base.decoder.decode(key.substring(1))))
+    return CID.createV1(raw.code, Digest.decode(this.base.decoder.decode(key.substring(1))));
   }
 
   async open (): Promise<void> {
     try {
-      await this.db.open()
+      await this.db.open(this.opts);
     } catch (err: any) {
-      throw new OpenFailedError(String(err))
+      throw new OpenFailedError(String(err));
     }
   }
 
-  async put (key: CID, value: Uint8Array): Promise<CID> {
+  async put (key: CID, value: Uint8Array, options?: AbortOptions): Promise<CID> {
     try {
-      await this.db.put(this.#encode(key), value)
-
-      return key
+      options?.signal?.throwIfAborted();
+      await raceSignal(this.db.put(this.#encode(key), value), options?.signal);
     } catch (err: any) {
-      throw new PutFailedError(String(err))
+      throw new PutFailedError(String(err));
     }
+
+    return key;
   }
 
-  async get (key: CID): Promise<Uint8Array> {
-    let data
+  async get (key: CID, options?: AbortOptions): Promise<Uint8Array> {
     try {
-      data = await this.db.get(this.#encode(key))
+      options?.signal?.throwIfAborted();
+      return await raceSignal(this.db.get(this.#encode(key)), options?.signal);
     } catch (err: any) {
       if (err.notFound != null) {
-        throw new NotFoundError(String(err))
+        throw new NotFoundError(String(err));
       }
 
-      throw new GetFailedError(String(err))
+      throw new GetFailedError(String(err));
     }
-    return data
   }
 
-  async has (key: CID): Promise<boolean> {
+  async has (key: CID, options?: AbortOptions): Promise<boolean> {
     try {
-      await this.db.get(this.#encode(key))
+      options?.signal?.throwIfAborted();
+      await raceSignal(this.db.get(this.#encode(key)), options?.signal);
     } catch (err: any) {
       if (err.notFound != null) {
-        return false
+        return false;
       }
 
-      throw err
+      throw err;
     }
-    return true
+
+    return true;
   }
 
-  async delete (key: CID): Promise<void> {
+  async delete (key: CID, options?: AbortOptions): Promise<void> {
     try {
-      await this.db.delete(this.#encode(key))
+      options?.signal?.throwIfAborted();
+      await raceSignal(this.db.del(this.#encode(key)), options?.signal);
     } catch (err: any) {
-      throw new DeleteFailedError(String(err))
+      throw new DeleteFailedError(String(err));
     }
   }
 
   async close (): Promise<void> {
-    await this.db.close()
+    await this.db.close();
   }
 
   async * getAll (options?: AbortOptions | undefined): AwaitIterable<Pair> {
-    for await (const { key, value } of this.#query({ values: true })) {
-      yield { cid: this.#decode(key), block: value }
+    options?.signal?.throwIfAborted();
+
+    for await (const { key, value } of this.#query({ values: true }, options)) {
+      yield { cid: this.#decode(key), block: value };
     }
   }
 
-  async * #query (opts: { values: boolean, prefix?: string }): AsyncIterable<{ key: string, value: Uint8Array }> {
+  async * #query (opts: { values: boolean, prefix?: string }, options?: AbortOptions): AsyncIterable<{ key: string, value: Uint8Array }> {
+    options?.signal?.throwIfAborted();
+
     const iteratorOpts: IteratorOptions<string, Uint8Array> = {
       keys: true,
       keyEncoding: 'buffer',
-      values: opts.values
-    }
+      values: opts.values,
+    };
 
     // Let the db do the prefix matching
     if (opts.prefix != null) {
-      const prefix = opts.prefix.toString()
+      const prefix = opts.prefix.toString();
       // Match keys greater than or equal to `prefix` and
-      iteratorOpts.gte = prefix
+      iteratorOpts.gte = prefix;
       // less than `prefix` + \xFF (hex escape sequence)
-      iteratorOpts.lt = prefix + '\xFF'
+      iteratorOpts.lt = prefix + '\xFF';
     }
 
-    const li = this.db.iterator(iteratorOpts)
+    const li = this.db.iterator(iteratorOpts);
 
     try {
       for await (const [key, value] of li) {
-        // @ts-expect-error key is a buffer because keyEncoding is "buffer"
-        yield { key: new TextDecoder().decode(key), value }
+        options?.signal?.throwIfAborted();
+        yield { key: new TextDecoder().decode(key), value };
+        options?.signal?.throwIfAborted();
       }
     } finally {
-      await li.close()
+      await li.close();
     }
   }
 }
