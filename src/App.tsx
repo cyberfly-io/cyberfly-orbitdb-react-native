@@ -3,16 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, Text, View, Pressable, StyleSheet, TextInput, ScrollView, Platform } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { useAccessController } from '@orbitdb/core';
-import { OrbitDBAddress } from '@orbitdb/core/src/orbitdb.js';
 
 import { startOrbitDB } from './db-services';
-import { toString } from 'uint8arrays/to-string';
-import ManifestStore from '@orbitdb/core/src/manifest-store.js'
-
 import { ComposedStorage, LRUStorage, IPFSBlockStorage } from '@orbitdb/core';
 import LevelStorage from './level-storage';
-
 import CyberflyAccessController from './cyberfly-access-controller';
+import { startPinService, setPinWorkerOrbitDB } from './background/pinWorker';
 
 export default function App() {
   const [orbitdb, setOrbitDB] = useState<any>(null);
@@ -24,67 +20,22 @@ export default function App() {
 
   useAccessController(CyberflyAccessController);
 
- useEffect(()=>{
-
-    async function getorbitdb(){
+  useEffect(() => {
+    (async () => {
       const ob = await startOrbitDB();
       setOrbitDB(ob);
-    }
-    getorbitdb();
+      // Provide the instance to the background pin worker (same JS context when app is foreground)
+      try { setPinWorkerOrbitDB(ob); } catch {}
+      // Start background pin service after injection
+      try { await startPinService(); } catch {}
+    })();
+  }, []);
 
- },[]);
-
- useEffect(()=>{
-
- async function pindb() {
-   if (orbitdb) {
-      const manifestStore = await ManifestStore({ ipfs:orbitdb.ipfs })
-
-    orbitdb.ipfs.libp2p.addEventListener('peer:discovery', async (evt: any) => {
-      console.log('Discovered peer:', evt.detail.id.toString());
-    });
-    orbitdb.ipfs.libp2p.services.pubsub.subscribe('pindb');
-    orbitdb.ipfs.libp2p.services.pubsub.addEventListener('message', async (msg: any) => {
-      const { topic, data } = msg.detail;
-      if (topic === 'pindb') {
-        try {
-          let dat = JSON.parse(toString(data));
-          if (typeof dat === 'string') {
-            dat = JSON.parse(dat);
-          }
-          const addr = OrbitDBAddress(dat.dbaddr);
-          const headsStorage = await ComposedStorage(
-            await LRUStorage({ size: 1000 }),
-            await LevelStorage({ path: `heads_${addr}` }),
-          );
-          const indexStorage = await ComposedStorage(
-            await LRUStorage({ size: 1000 }),
-            await LevelStorage({ path: `index_${addr}` }),
-          );
-          const entryStorage = await ComposedStorage(
-            await LRUStorage({ size: 1000 }),
-            await IPFSBlockStorage({ ipfs: orbitdb.ipfs, pin: true }),
-          );
-          const manifest = await manifestStore.get(addr.hash);
-          if (manifest.accessController.includes('cyberfly')) {
-            console.log(`Pinning db: ${dat.dbaddr}`);
-            await orbitdb.open(dat.dbaddr, { entryStorage, headsStorage, indexStorage });
-            console.log('Pinned db:', dat.dbaddr);
-          }
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    });
-  }
-  
- }
-pindb();
-  },[orbitdb]);
+  // Note: startPinService is already called after orbitdb injection above
 
   // Handler to open a user-provided db address and show JSON
   const handleLoadDb = async () => {
-  if (!orbitdb) { return; }
+    if (!orbitdb) { return; }
     const addr = (dbAddr || '').trim();
     if (!addr) {
       setError('Please enter an OrbitDB address');
@@ -143,7 +94,7 @@ pindb();
           )}
         </View>
         {/* Input form for OrbitDB address */}
-  <View style={styles.sectionGap}>
+        <View style={styles.sectionGap}>
           <Text style={styles.label}>OrbitDB Address</Text>
           <View style={styles.row}>
             <TextInput

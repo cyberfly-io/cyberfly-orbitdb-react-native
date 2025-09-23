@@ -50,7 +50,9 @@ const startOrbitDB = async () => {
           }
           try {
             const started = (libp2p.services.pubsub as any).isStarted();
-            if (started) break;
+            if (started) {
+              break;
+            }
           } catch {
             // ignore and retry
           }
@@ -60,7 +62,7 @@ const startOrbitDB = async () => {
       const status = libp2p.services.pubsub ? (typeof (libp2p.services.pubsub as any).isStarted === 'function' ? (libp2p.services.pubsub as any).isStarted() : true) : false;
       console.log('Pubsub readiness after wait:', status);
       return status;
-    }
+    };
 
     console.log('Waiting for pubsub to be fully ready (up to 10s)...');
     await waitForPubsubReady(10_000);

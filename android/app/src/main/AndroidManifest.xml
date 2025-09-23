@@ -22,5 +22,14 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+
+      <service
+        android:name="com.zoontek.rnbackgroundactions.BackgroundActionsTask"
+        android:foregroundServiceType="dataSync|connectedDevice|mediaProjection|mediaPlayback"
+        android:exported="false" />
+
+      <service
+        android:name="com.zoontek.rnbackgroundactions.HeadlessJsTaskService"
+        android:exported="false" />
     </application>
 </manifest>

@@ -1,6 +1,9 @@
 declare module '@orbitdb/core';
 declare module '@orbitdb/core-types';
+declare module '@orbitdb/core/src/orbitdb.js';
+declare module '@orbitdb/core/src/manifest-store.js';
 declare module '@chainsafe/libp2p-gossipsub';
 declare module '@libp2p/*';
 declare module 'event-target-shim';
 declare module 'text-encoding';
+declare module 'react-native-background-actions';
