@@ -87,7 +87,7 @@ const DashboardScreen: React.FC = () => {
     >
       <View style={styles.heroCard}>
         <View style={styles.heroHeader}>
-          <View>
+          <View style={styles.heroInfo}>
             <Text style={styles.heroTitle}>Orbit node</Text>
             <Text style={styles.heroSubtitle}>{heroSubtitle}</Text>
           </View>
@@ -154,6 +154,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: spacing.md,
   },
+  heroInfo: {
+    flex: 1,
+    paddingRight: spacing.md,
+  },
   heroTitle: {
     color: palette.textPrimary,
     fontSize: typography.heading1,
@@ -164,7 +168,7 @@ const styles = StyleSheet.create({
     fontSize: typography.small,
     lineHeight: 20,
     marginTop: spacing.xs,
-    maxWidth: 260,
+    flexShrink: 1,
   },
   heroMetaRow: {
     flexDirection: 'row',
@@ -256,6 +260,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    flexShrink: 0,
   },
   statusDot: {
     width: 8,

@@ -13,20 +13,34 @@ import SettingsScreen from '../screens/SettingsScreen';
 const Tab = createBottomTabNavigator();
 
 // Simple icon component since we don't have icon fonts set up yet
-const TabIcon = ({ name, color }: { name: string; color: string }) => (
-  <Text style={[styles.iconText, { color }]}>{name}</Text>
+const TabIcon = ({ name, color, size = 20 }: { name: string; color: string; size?: number }) => (
+  <Text style={[styles.iconText, { color, fontSize: size }]}>{name}</Text>
 );
 
 // Define icon components outside render
-const DashboardIcon = ({ color }: { color: string }) => <TabIcon name="�" color={color} />;
-const OpenIcon = ({ color }: { color: string }) => <TabIcon name="📂" color={color} />;
-const SettingsIcon = ({ color }: { color: string }) => <TabIcon name="⚙️" color={color} />;
+const DashboardIcon = ({ color, size }: { color: string; size?: number }) => (
+  <TabIcon name="📊" color={color} size={size}
+  />
+);
+const OpenIcon = ({ color, size }: { color: string; size?: number }) => <TabIcon name="📂" color={color} size={size} />;
+const SettingsIcon = ({ color, size }: { color: string; size?: number }) => <TabIcon name="⚙️" color={color} size={size} />;
 
 const styles = StyleSheet.create({
   iconText: {
     fontSize: 20,
   },
 });
+
+// Tab icon renderers (stable references for linter compliance)
+const renderDashboardIcon = ({ color, size }: { color: string; size: number }) => (
+  <DashboardIcon color={color} size={size} />
+);
+const renderOpenIcon = ({ color, size }: { color: string; size: number }) => (
+  <OpenIcon color={color} size={size} />
+);
+const renderSettingsIcon = ({ color, size }: { color: string; size: number }) => (
+  <SettingsIcon color={color} size={size} />
+);
 
 const TabNavigator = () => {
   return (
@@ -62,7 +76,7 @@ const TabNavigator = () => {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          tabBarIcon: DashboardIcon,
+          tabBarIcon: renderDashboardIcon,
           headerTitle: 'Node Dashboard',
         }}
       />
@@ -70,7 +84,7 @@ const TabNavigator = () => {
           name="Open"
           component={OpenDatabaseScreen}
           options={{
-            tabBarIcon: OpenIcon,
+            tabBarIcon: renderOpenIcon,
             headerTitle: 'Open Database',
           }}
         />
@@ -78,7 +92,7 @@ const TabNavigator = () => {
         name="Settings"
         component={SettingsScreen}
         options={{
-          tabBarIcon: SettingsIcon,
+          tabBarIcon: renderSettingsIcon,
           headerTitle: 'Settings & Status',
         }}
       />
